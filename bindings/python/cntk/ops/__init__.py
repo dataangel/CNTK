@@ -339,6 +339,7 @@ def convolution(convolution_map, operand, strides=(1,), sharing=[True],
          which means that all input channels are convolved to produce all output channels. A value of N would mean that the input (and output) channels are
          divided into N groups with the input channels in one group (say i-th input group) contributing to output channels in only one group (i-th output group).
          Number of input and output channels must be divisble by value of groups argument. Also, value of this argument must be strictly positive, i.e. groups > 0. 
+        sequential (bool, default False): flag if convolve over sequential axis. 
         max_temp_mem_size_in_samples (int): maximum amount of auxiliary memory (in samples) that should be reserved to perform convolution
          operations. Some convolution engines (e.g. cuDNN and GEMM-based engines) can benefit from using workspace as it may improve
          performance. However, sometimes this may lead to higher memory utilization. Default is 0 which means the same as the input
@@ -351,8 +352,8 @@ def convolution(convolution_map, operand, strides=(1,), sharing=[True],
     operand = sanitize_input(operand)
     strides, sharing, auto_padding = sanitize_convolution_args(strides, sharing, auto_padding)
     dilation = sanitize_shape(dilation)
-    return convolution(convolution_map, operand, strides, sharing, auto_padding, sequential, dilation,
-                       reduction_rank, groups, max_temp_mem_size_in_samples, name)
+    return convolution(convolution_map, operand, strides, sharing, auto_padding, dilation,
+                       reduction_rank, groups, max_temp_mem_size_in_samples, sequential, name)
 
 @typemap
 def convolution_transpose(convolution_map, operand, strides=(1,), sharing=[True],

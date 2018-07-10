@@ -213,7 +213,7 @@ void Run1DSeqConvLayer(const DeviceDescriptor& device, bool auto_padding = true)
     auto conv = Convolution(convParam, input, {
                                                   2,
                                               },
-                            {true}, {auto_padding}, true);
+                            {true}, {auto_padding}, { 1 }, 1, 1, 0, true);
     auto convb = Parameter({1}, AsDataType<ElementType>(), (ElementType) 1.0f, device);
     auto relu = LeakyReLU(Plus(conv, convb), 0.01);
 
@@ -317,7 +317,7 @@ std::vector<std::vector<ElementType>> RunConvSeqByUnpack(const DeviceDescriptor&
     auto input = InputVariable({20, 1}, AsDataType<ElementType>(), L"features");
     auto input_ = Reshape(input, {10, 2});
     auto convParam = Parameter({3, 2, 2}, AsDataType<ElementType>(), (ElementType) 1.0f, device);
-    auto conv = Convolution(convParam, input_, {2, 2}, /*sharing = */ {true}, /*autoPadding = */ {true}, /*sequential = */ true);
+    auto conv = Convolution(convParam, input_, {2, 2}, /*sharing = */ {true}, /*autoPadding = */ {true}, { 1 }, 1, 1, 0, true);
 
     const size_t channelSize = 2;
     const std::vector<size_t> sequenceSize = {4, 5, 2, 2};
@@ -657,7 +657,7 @@ void RunConvDilTest(const DeviceDescriptor& device, bool sequential = false)
 
     auto params = Parameter({2, 3, 1, 2}, AsDataType<ElementType>(), (ElementType) 1.0f, device);
 
-    auto conv = Convolution(params, input, {1}, {true}, {true}, sequential, {1, 2});
+    auto conv = Convolution(params, input, {1}, {true}, {true}, {1, 2}, 1, 1, 0, sequential);
 
     size_t inputDataSize = 12;
     std::vector<size_t> sequenceSize(5, 1);

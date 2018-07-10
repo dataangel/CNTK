@@ -1022,7 +1022,10 @@ def test_1D_convolution_without_reduction_dim():
 ####################################
 # 1D convolution with dilation
 ####################################
-def test_1D_convolution_with_dilation():
+def test_1D_convolution_with_dilation(device_id):
+    # Currently dilation is not supported on CPU. 
+    if device_id == -1:
+        return
     c = Convolution(3, init=np.array([4,2,1]), reduction_rank=0, bias=False, dilation=2, pad=True)
     c.update_signature(5)
     data = [np.array([[2, 6, 4, 8, 6]])]   # like a audio sequence, in a static dimension
@@ -1033,7 +1036,10 @@ def test_1D_convolution_with_dilation():
 ####################################
 # 1D sequential convolution with dilation
 ####################################
-def test_1D_sequential_convolution_with_dilation():
+def test_1D_sequential_convolution_with_dilation(device_id):
+    # Currently dilation is not supported on CPU. 
+    if device_id == -1:
+        return
     c = SequentialConvolution(3, init=np.array([4,2,1]), reduction_rank=0, bias=False, dilation=2, pad=True)
     c.update_signature(Sequence[Tensor[()]])
     data = np.array([[2, 6, 4, 8, 6]])   # like a audio sequence, in a static dimension
@@ -1052,7 +1058,10 @@ def test_1D_sequential_convolution_with_dilation():
 ####################################
 # 2D convolution with dilation
 ####################################
-def test_2D_convolution_with_dilation():
+def test_2D_convolution_with_dilation(device_id):
+    # Currently dilation is not supported on CPU. 
+    if device_id == -1:
+        return
     dilation = 2
 
     data = np.asarray([[0.4, 0.6, 0.8, 1.0, 1.2], [0.2, 0.3, 0.4, 0.5, 0.6], [2.5, 2.3, 2.1, 1.9, 1.7]], dtype=np.float32)
@@ -1074,7 +1083,10 @@ def test_2D_convolution_with_dilation():
 ####################################
 # 2D sequential convolution with dilation
 ####################################
-def test_2D_sequential_convolution_with_dilation():
+def test_2D_sequential_convolution_with_dilation(device_id):
+    # Currently dilation is not supported on CPU. 
+    if device_id == -1:
+        return
     dilation = 2
 
     data = np.asarray([[0.4, 0.6, 0.8, 1.0, 1.2], [0.2, 0.3, 0.4, 0.5, 0.6], [2.5, 2.3, 2.1, 1.9, 1.7]], dtype=np.float32)

@@ -2451,11 +2451,11 @@ namespace CNTK
         const NDShape& strides,
         const std::vector<bool>& sharing,
         const std::vector<bool>& autoPadding,
-        bool sequential,
         const NDShape& dilation,
         size_t reductionRank,
         size_t groups,
         size_t maxTempMemSizeInSamples,
+        bool sequential,
         const std::wstring& name)
     {
         if ((reductionRank != 0) && (reductionRank != 1))
