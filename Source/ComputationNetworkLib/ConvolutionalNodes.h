@@ -311,7 +311,7 @@ public:
 // other than the common ones shared with PoolingNode.
 //
 template <class ElemType>
-class ConvolutionNodeBaseExtended : public ConvolutionNodeBase<ElemType>, public NumInputs<2>
+class ConvolutionNodeBaseExtended : public ConvolutionNodeBase<ElemType>, public NumInputs<2>, public TransformerNode
 {
     typedef ConvolutionNodeBase<ElemType> Base; UsingComputationNodeMembers; 
     UsingConvolutionNodeBaseMembersNonInstantiate;
@@ -354,6 +354,13 @@ public:
             configp->Get(L"transpose"), configp->Get(L"dimOutputShape"), ImageLayoutKindFrom(configp->Get(L"imageLayout")), configp->Get(L"maxTempMemSizeInSamples"), configp->Get(L"dimDilation"))
     {
         AttachInputsFromConfig(configp, GetExpectedNumInputs());
+    }
+
+    // TODO: the check for NeedsDynamicValidation() is a temporary resolution and needs to be properly handled when we look at support for free dimension convolution inputs.
+    virtual ParentGradientOptimization ImplementsGradientOptimization(const ComputationNodeBase*) const override
+    {
+        bool overwrite = Base::NeedsDynamicValidation() ? false : m_convEng->ImplementsGradientOverwriteOptimization();
+        return overwrite ? ParentGradientOptimization::Overwrite : ParentGradientOptimization::None;
     }
 
 public:
@@ -429,6 +436,31 @@ public:
 
     bool OutputUsedInComputingInputNodesGradients() const override { return false; }
 
+private:
+    using TransformerNode::m_transforms;
+    using ConvolutionNodeBase<ElemType>::ComputeFilterTransform;
+
+    virtual void /*TransformerNode::*/ComputeTransforms() override
+    {
+        if (m_transforms[1].m_axisTransforms.empty())
+        {
+            m_transforms[1] = ComputeFilterTransform();
+            if (!m_transpose)
+            {
+                // Convolution, need to inverse transform.
+                m_transforms[1] = m_transforms[1].Inverse();
+            }
+            // else: Deconvolution, nothing to do.
+        }
+        // else: transform already computed, no need to do computation again.
+    }
+
+    virtual bool /*TransformerNode::*/SupportsTransformOnInput(size_t inputIndex) override
+    {
+        // We support transforms just on convolution input.
+        return (inputIndex == 1);
+    }
+
 protected:
     TensorShape m_dilation;
     size_t m_groups;
@@ -449,7 +481,7 @@ public:
 // -----------------------------------------------------------------------
 
 template <class ElemType>
-class ConvolutionNode : public ConvolutionNodeBaseExtended<ElemType>, public TransformerNode
+class ConvolutionNode : public ConvolutionNodeBaseExtended<ElemType>
 {
     typedef ConvolutionNodeBaseExtended<ElemType> Base; UsingConvolutionBaseNodeMembers;
     static const std::wstring TypeName() { return L"Convolution"; }
@@ -475,13 +507,6 @@ public:
     ConvolutionNode(const ScriptableObjects::IConfigRecordPtr configp)
         : Base(configp)
     {
-    }
-
-    // TODO: the check for NeedsDynamicValidation() is a temporary resolution and needs to be properly handled when we look at support for free dimension convolution inputs.
-    virtual ParentGradientOptimization ImplementsGradientOptimization(const ComputationNodeBase*) const override
-    {
-        bool overwrite = Base::NeedsDynamicValidation() ? false : m_convEng->ImplementsGradientOverwriteOptimization();
-        return overwrite ? ParentGradientOptimization::Overwrite : ParentGradientOptimization::None;
     }
 
 public:
@@ -696,30 +721,6 @@ public:
     }
 
 private:
-    using TransformerNode::m_transforms;
-    using ConvolutionNodeBase<ElemType>::ComputeFilterTransform;
-
-    virtual void /*TransformerNode::*/ComputeTransforms() override
-    {
-        if (m_transforms[1].m_axisTransforms.empty())
-        {
-            m_transforms[1] = ComputeFilterTransform();
-            if (!m_transpose)
-            {
-                // Convolution, need to inverse transform.
-                m_transforms[1] = m_transforms[1].Inverse();
-            }
-            // else: Deconvolution, nothing to do.
-        }
-        // else: transform already computed, no need to do computation again.
-    }
-
-    virtual bool /*TransformerNode::*/SupportsTransformOnInput(size_t inputIndex) override
-    {
-        // We support transforms just on convolution input.
-        return (inputIndex == 1);
-    }
-
     virtual TensorShape /*ConvolutionNode::*/ComputeOutputShape(const TensorShape& inputShape,
         const TensorShape& dilate, bool ceilOutDim, bool isFinalValidationPass)
     {
